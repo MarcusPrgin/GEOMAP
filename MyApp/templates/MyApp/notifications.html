@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - GeoMap{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+        color: #f5f5f7;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #f5f5f7;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #f5f5f7 0%, #86868b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .notifications-container {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 2rem;
+        backdrop-filter: blur(20px);
+        margin-bottom: 2rem;
+    }
+
+    .notification-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .notification-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .notification-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .notification-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .notification-title {
+        color: #f5f5f7;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .notification-time {
+        color: #86868b;
+        font-size: 0.875rem;
+    }
+
+    .notification-message {
+        color: #a1a1a6;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .notification-unread {
+        border-left: 3px solid #0071e3;
+    }
+
+    .notification-proximity {
+        border-left: 3px solid #ff9500;
+    }
+
+    .notification-friend {
+        border-left: 3px solid #30d158;
+    }
+
+    .no-notifications {
+        text-align: center;
+        color: #a1a1a6;
+        padding: 3rem;
+        font-size: 1.1rem;
+    }
+
+    .no-notifications-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        background: #0071e3;
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn:hover {
+        background: #0077ed;
+        box-shadow: 0 4px 20px rgba(0, 113, 227, 0.4);
+    }
+
+    .btn-back {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f5f5f7;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .actions {
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .notification-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+
+        .notification-time {
+            text-align: left;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="header">
+        <h1 class="title">Notifications</h1>
+    </div>
+
+    <div class="notifications-container">
+        {% if notifications %}
+            {% for notification in notifications %}
+                <div class="notification-item {% if not notification.is_read %}notification-unread{% endif %} {% if notification.notification_type == 'proximity' %}notification-proximity{% elif notification.notification_type == 'friend_request' %}notification-friend{% endif %}">
+                    <div class="notification-header">
+                        <h3 class="notification-title">
+                            {% if notification.title %}
+                                {{ notification.title }}
+                            {% elif notification.notification_type == 'proximity' %}
+                                Peer Nearby
+                            {% elif notification.notification_type == 'friend_request' %}
+                                Friend Request
+                            {% else %}
+                                Notification
+                            {% endif %}
+                        </h3>
+                        <span class="notification-time">
+                            {% if notification.created_at %}
+                                {{ notification.created_at|timesince }} ago
+                            {% else %}
+                                Just now
+                            {% endif %}
+                        </span>
+                    </div>
+                    <p class="notification-message">
+                        {% if notification.message %}
+                            {{ notification.message }}
+                        {% else %}
+                            {{ notification }}
+                        {% endif %}
+                    </p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-notifications">
+                <div class="no-notifications-icon">🔔</div>
+                <h3>No notifications yet</h3>
+                <p>You'll see friend requests, proximity alerts, and other updates here.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'MyApp:dashboard' %}" class="btn btn-back">Back to Dashboard</a>
+        <a href="{% url 'MyApp:map' %}" class="btn">View Map</a>
+    </div>
+</div>
+{% endblock %}

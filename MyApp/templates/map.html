@@ -1,0 +1,727 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}GeoMap - Interactive Location Mapping{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: #000000;
+        min-height: 100vh;
+    }
+
+    .hero {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 3rem 0;
+        text-align: center;
+        color: white;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .controls {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        padding: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        color: #667eea;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn.active {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: #666;
+        line-height: 1.6;
+    }
+
+    .map-section {
+        padding: 2rem;
+    }
+
+    .map-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .map-header {
+        padding: 1.5rem;
+        background: #f8f9fa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .map-title {
+        font-size: 1.8rem;
+        color: #333;
+    }
+
+    .map-controls {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .status-card {
+        padding: 0.5rem 1rem;
+        background: #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: #374151;
+    }
+
+    .status-active {
+        background: #667eea;
+        color: white;
+    }
+
+    .status-counter {
+        background: #10b981;
+        color: white;
+        font-weight: 600;
+    }
+
+    #map {
+        height: 600px;
+        width: 100%;
+    }
+
+    .instructions-section {
+        padding: 3rem 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .instructions {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 12px;
+    }
+
+    .instructions h3 {
+        font-size: 2rem;
+        color: #667eea;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .instruction-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .instruction-item {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .instruction-icon {
+        font-size: 2rem;
+    }
+
+    .instruction-text {
+        color: #666;
+        line-height: 1.6;
+    }
+
+    .footer {
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        text-align: center;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .marker-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    }
+
+    .marker-modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .marker-modal-content h3 {
+        margin-bottom: 1.5rem;
+        color: #667eea;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .coordinates-display {
+        padding: 0.75rem;
+        background: #f3f4f6;
+        border-radius: 6px;
+        font-family: monospace;
+        color: #374151;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .modal-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .modal-btn-cancel {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .modal-btn-cancel:hover {
+        background: #d1d5db;
+    }
+
+    .modal-btn-create {
+        background: #667eea;
+        color: white;
+    }
+
+    .modal-btn-create:hover {
+        background: #5568d3;
+    }
+
+    .user-location-marker {
+        background: #3b82f6;
+        border: 3px solid white;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="container">
+        <h1 class="hero-title">GeoMap</h1>
+        <p class="hero-subtitle">Interactive Location Mapping & Smart Recommendations</p>
+    </div>
+</div>
+
+<div class="controls">
+    <a href="{% url 'MyApp:dashboard' %}" class="btn">🏠 Dashboard</a>
+    <button id="addModeBtn" class="btn">📍 Add Points</button>
+    <button id="deleteModeBtn" class="btn">🗑️ Remove Points</button>
+    <button id="clearAllBtn" class="btn btn-danger">🧹 Clear All</button>
+    <button id="findLocationBtn" class="btn">📍 Find My Location</button>
+    <button id="peerTrackingBtn" class="btn">👥 Peer Tracking</button>
+</div>
+
+<section class="features">
+    <div class="feature-card">
+        <h3 class="feature-title">Real-time Collaboration</h3>
+        <p class="feature-description">
+            Add, edit, and manage location markers in real-time with seamless synchronization.
+        </p>
+    </div>
+    <div class="feature-card">
+        <h3 class="feature-title">Smart Recommendations</h3>
+        <p class="feature-description">
+            Receive personalized recommendations for the closest markers based on your current location.
+        </p>
+    </div>
+    <div class="feature-card">
+        <h3 class="feature-title">Proximity Alerts</h3>
+        <p class="feature-description">
+            Get notified when you're near points of interest or when friends are nearby.
+        </p>
+    </div>
+</section>
+
+<section class="map-section">
+    <div class="map-container">
+        <div class="map-header">
+            <h2 class="map-title">Interactive Map</h2>
+            <div class="map-controls">
+                <div id="statusIndicator" class="status-card">Ready to use</div>
+                <div id="trackingIndicator" class="status-card tracking-indicator" style="display: none;">
+                    🔍 Tracking Active
+                </div>
+                <div id="markerCount" class="status-card status-counter">
+                    Points: <span id="count">0</span>
+                </div>
+            </div>
+        </div>
+        <div id="map"></div>
+    </div>
+</section>
+
+<section class="instructions-section">
+    <div class="instructions">
+        <h3>How to use GeoMap</h3>
+        <div class="instruction-grid">
+            <div class="instruction-item">
+                <span class="instruction-icon">📍</span>
+                <p class="instruction-text">
+                    Click "Add Points" and then click anywhere on the map to place new location markers
+                </p>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">🗑️</span>
+                <p class="instruction-text">
+                    Select "Remove Points" and click on existing markers to delete them from your map
+                </p>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">🧹</span>
+                <p class="instruction-text">
+                    Use "Clear All" to instantly remove all markers and start fresh with a clean map
+                </p>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">📍</span>
+                <p class="instruction-text">
+                    Click "Find My Location" to center the map on your current position
+                </p>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">👥</span>
+                <p class="instruction-text">
+                    Enable "Peer Tracking" to get notified when other users are nearby
+                </p>
+            </div>
+            <div class="instruction-item">
+                <span class="instruction-icon">🔔</span>
+                <p class="instruction-text">
+                    Proximity alerts will appear when you're within range of another user
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <p class="footer-text">© 2024 GeoMap</p>
+    </div>
+</footer>
+
+{{ markers|json_script:"markers-data" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+const markersData = JSON.parse(document.getElementById('markers-data').textContent);
+const map = L.map('map').setView([37.7749, -122.4194], 10);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20,
+}).addTo(map);
+
+let addMode = false;
+let deleteMode = false;
+let markerCount = markersData ? markersData.length : 0;
+let userLocation = null;
+let userMarker = null;
+let pendingMarkerLocation = null;
+let isTrackingEnabled = {% if is_tracking_enabled %}true{% else %}false{% endif %};
+
+const addModeBtn = document.getElementById('addModeBtn');
+const deleteModeBtn = document.getElementById('deleteModeBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const findLocationBtn = document.getElementById('findLocationBtn');
+const peerTrackingBtn = document.getElementById('peerTrackingBtn');
+const statusIndicator = document.getElementById('statusIndicator');
+const countElement = document.getElementById('count');
+
+function updateUI() {
+    countElement.textContent = markerCount;
+
+    if (addMode) {
+        statusIndicator.textContent = 'Click on the map to add points';
+        statusIndicator.className = 'status-card status-active';
+        addModeBtn.classList.add('active');
+        deleteModeBtn.classList.remove('active');
+    } else if (deleteMode) {
+        statusIndicator.textContent = 'Click on points to remove them';
+        statusIndicator.className = 'status-card status-active';
+        deleteModeBtn.classList.add('active');
+        addModeBtn.classList.remove('active');
+    } else {
+        statusIndicator.textContent = 'Ready to use';
+        statusIndicator.className = 'status-card';
+        addModeBtn.classList.remove('active');
+        deleteModeBtn.classList.remove('active');
+    }
+}
+
+const markerLayer = L.layerGroup().addTo(map);
+
+if (markersData) {
+    markersData.forEach(markerData => {
+        const marker = L.marker([markerData.latitude, markerData.longitude])
+            .bindPopup(`
+                <div style="min-width: 200px;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1.1rem;">${markerData.title || 'Location Point'}</h4>
+                    ${markerData.description ? `<p style="margin: 0 0 0.75rem 0; color: #666; font-size: 0.9rem; line-height: 1.4;">${markerData.description}</p>` : ''}
+                    <p style="margin: 0; color: #999; font-size: 0.8rem; font-family: monospace;">
+                        ${markerData.latitude.toFixed(4)}, ${markerData.longitude.toFixed(4)}
+                    </p>
+                </div>
+            `);
+        
+        marker.markerId = markerData.id;
+        
+        marker.on('click', function(e) {
+            if (deleteMode) {
+                e.originalEvent.stopPropagation();
+                deleteMarker(marker);
+            }
+        });
+        
+        markerLayer.addLayer(marker);
+    });
+}
+
+addModeBtn.addEventListener('click', () => {
+    addMode = !addMode;
+    deleteMode = false;
+    updateUI();
+});
+
+deleteModeBtn.addEventListener('click', () => {
+    deleteMode = !deleteMode;
+    addMode = false;
+    updateUI();
+});
+
+clearAllBtn.addEventListener('click', () => {
+    if (confirm('Are you sure you want to remove all points from the map?')) {
+        clearAllMarkers();
+    }
+});
+
+findLocationBtn.addEventListener('click', () => {
+    getUserLocation();
+});
+
+map.on('click', function(e) {
+    if (addMode) {
+        pendingMarkerLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+        showMarkerModal();
+    }
+});
+
+function showMarkerModal() {
+    const modal = document.createElement('div');
+    modal.className = 'marker-modal';
+    modal.innerHTML = `
+        <div class="marker-modal-content">
+            <h3>Create New Marker</h3>
+            <form id="markerForm">
+                <div class="form-group">
+                    <label for="markerTitle">Title *</label>
+                    <input type="text" id="markerTitle" placeholder="Enter marker title" required maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="markerDescription">Description</label>
+                    <textarea id="markerDescription" placeholder="Enter marker description (optional)" maxlength="500"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Coordinates</label>
+                    <div class="coordinates-display">
+                        ${pendingMarkerLocation.lat.toFixed(6)}, ${pendingMarkerLocation.lng.toFixed(6)}
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn modal-btn-cancel" onclick="closeMarkerModal()">Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn-create">Create Marker</button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    document.getElementById('markerTitle').focus();
+
+    document.getElementById('markerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const title = document.getElementById('markerTitle').value.trim();
+        const description = document.getElementById('markerDescription').value.trim();
+        
+        if (title) {
+            addMarker(pendingMarkerLocation.lat, pendingMarkerLocation.lng, title, description);
+            closeMarkerModal();
+        }
+    });
+}
+
+function closeMarkerModal() {
+    const modal = document.querySelector('.marker-modal');
+    if (modal) {
+        modal.remove();
+    }
+    pendingMarkerLocation = null;
+}
+
+async function addMarker(lat, lng, title = 'Location Point', description = '') {
+    try {
+        const response = await fetch('{% url "MyApp:add_marker" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+            body: JSON.stringify({
+                latitude: lat,
+                longitude: lng,
+                title: title,
+                description: description
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const marker = L.marker([lat, lng])
+                .bindPopup(`
+                    <div style="min-width: 200px;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1.1rem;">${title}</h4>
+                        ${description ? `<p style="margin: 0 0 0.75rem 0; color: #666; font-size: 0.9rem; line-height: 1.4;">${description}</p>` : ''}
+                        <p style="margin: 0; color: #999; font-size: 0.8rem; font-family: monospace;">
+                            ${lat.toFixed(4)}, ${lng.toFixed(4)}
+                        </p>
+                    </div>
+                `);
+            
+            marker.markerId = data.id;
+            
+            marker.on('click', function(e) {
+                if (deleteMode) {
+                    e.originalEvent.stopPropagation();
+                    deleteMarker(marker);
+                }
+            });
+            
+            markerLayer.addLayer(marker);
+            markerCount++;
+            updateUI();
+        }
+    } catch (error) {
+        console.error('Error adding marker:', error);
+    }
+}
+
+async function deleteMarker(marker) {
+    try {
+        const response = await fetch(`{% url "MyApp:delete_marker" 0 %}`.replace('0', marker.markerId), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            }
+        });
+
+        if (response.ok) {
+            markerLayer.removeLayer(marker);
+            markerCount--;
+            updateUI();
+        }
+    } catch (error) {
+        console.error('Error deleting marker:', error);
+    }
+}
+
+async function clearAllMarkers() {
+    try {
+        const response = await fetch('{% url "MyApp:clear_markers" %}', {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            }
+        });
+
+        if (response.ok) {
+            markerLayer.clearLayers();
+            markerCount = 0;
+            updateUI();
+        }
+    } catch (error) {
+        console.error('Error clearing markers:', error);
+    }
+}
+
+function getUserLocation() {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+
+            const userIcon = L.divIcon({
+                className: 'user-location-marker',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            userMarker = L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+                .bindPopup('<b>Your Location</b>')
+                .addTo(map);
+
+            map.setView([userLocation.lat, userLocation.lng], 13);
+        },
+        (error) => {
+            console.error('Geolocation error:', error);
+            alert('Unable to retrieve your location.');
+        }
+    );
+}
+
+window.closeMarkerModal = closeMarkerModal;
+
+updateUI();
+</script>
+{% endblock %}

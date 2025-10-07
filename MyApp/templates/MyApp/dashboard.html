@@ -1,0 +1,250 @@
+<!-- templates/location_app/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location App - Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .friend-item:last-child {
+            border-bottom: none;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .online { background: #28a745; }
+        .offline { background: #6c757d; }
+        .distance {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .location-status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .location-enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+        .location-disabled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome, {{ user.username }}!</h1>
+        <div>
+            <a href="{% url 'MyApp:notifications' %}" class="btn">Notifications</a>
+            <a href="{% url 'MyApp:user_search' %}" class="btn">Find Friends</a>
+            <a href="{% url 'MyApp:map' %}" class="btn">View Map</a>
+            <a href="{% url 'home' %}" class="btn">Home</a>
+        </div>
+    </div>
+    
+    <!-- Location Status -->
+    <div class="card">
+        <h3>Your Location Settings</h3>
+        <div class="location-status {% if user_profile.location_sharing_enabled %}location-enabled{% else %}location-disabled{% endif %}">
+            Location sharing is {% if user_profile.location_sharing_enabled %}enabled{% else %}disabled{% endif %}
+            {% if user_profile.last_location_update %}
+                - Last update: {{ user_profile.last_location_update|timesince }} ago
+            {% endif %}
+        </div>
+        <a href="{% url 'MyApp:toggle_location_sharing' %}" class="btn">
+            {% if user_profile.location_sharing_enabled %}Disable{% else %}Enable{% endif %} Location Sharing
+        </a>
+        <button onclick="updateLocation()" class="btn" id="locationBtn">Update Current Location</button>
+    </div>
+
+    <!-- Friends List -->
+    <div class="card">
+        <h3>Your Friends ({{ friend_profiles|length }})</h3>
+        {% if friend_profiles %}
+            {% for friend_data in friend_profiles %}
+                <div class="friend-item">
+                    <div>
+                        <span class="status-indicator {% if friend_data.profile.last_location_update %}online{% else %}offline{% endif %}"></span>
+                        <strong>{{ friend_data.user.username }}</strong>
+                        {% if friend_data.distance %}
+                            <span class="distance">({{ friend_data.distance }}km away)</span>
+                        {% endif %}
+                        {% if friend_data.profile.last_location_update %}
+                            <br><small>Last seen: {{ friend_data.profile.last_location_update|timesince }} ago</small>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No friends yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Pending Friend Requests -->
+    {% if pending_requests %}
+        <div class="card">
+            <h3>Pending Friend Requests</h3>
+            {% for request in pending_requests %}
+                <div class="friend-item">
+                    <div>
+                        <strong>{{ request.requester.username }}</strong>
+                        <br><small>{{ request.created_at|timesince }} ago</small>
+                    </div>
+                    <div>
+                        <a href="{% url 'MyApp:handle_friend_request' request.id 'accept' %}" class="btn btn-success">Accept</a>
+                        <a href="{% url 'MyApp:handle_friend_request' request.id 'decline' %}" class="btn btn-danger">Decline</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="card">
+            {% for message in messages %}
+                <div style="padding: 10px; background: #d4edda; color: #155724; border-radius: 4px; margin: 5px 0;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <script>
+        function updateLocation() {
+            const btn = document.getElementById('locationBtn');
+            btn.textContent = 'Getting location...';
+            btn.disabled = true;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+
+                        fetch('{% url "MyApp:update_location" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                latitude: lat,
+                                longitude: lng
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                btn.textContent = 'Location Updated!';
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                btn.textContent = 'Error updating location';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            btn.textContent = 'Error updating location';
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                btn.textContent = 'Update Current Location';
+                                btn.disabled = false;
+                            }, 2000);
+                        });
+                    },
+                    function(error) {
+                        btn.textContent = 'Location access denied';
+                        btn.disabled = false;
+                        console.error('Geolocation error:', error);
+                    }
+                );
+            } else {
+                btn.textContent = 'Geolocation not supported';
+                btn.disabled = false;
+            }
+        }
+
+        // Auto-update location every 5 minutes if location sharing is enabled
+        {% if user_profile.location_sharing_enabled %}
+        setInterval(() => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        fetch('{% url "MyApp:update_location" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            })
+                        });
+                    }
+                );
+            }
+        }, 300000); // 5 minutes
+        {% endif %}
+    </script>
+</body>
+</html>

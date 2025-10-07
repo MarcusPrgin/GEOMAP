@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Friends{% endblock %}
+
+{% block content %}
+<div style="padding: 2rem;">
+    <h1>Find Friends</h1>
+    
+    <form method="get" style="margin-bottom: 2rem;">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search usernames..." style="padding: 0.5rem; width: 300px;">
+        <button type="submit" style="padding: 0.5rem 1rem;">Search</button>
+    </form>
+    
+    {% if users %}
+        {% for user in users %}
+            <div style="padding: 1rem; border: 1px solid #ccc; margin: 1rem 0;">
+                <strong>{{ user.username }}</strong>
+                <a href="{% url 'MyApp:send_friend_request' user.id %}" style="margin-left: 1rem; padding: 0.25rem 0.5rem; background: #007bff; color: white; text-decoration: none;">Send Request</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        {% if query %}
+            <p>No users found.</p>
+        {% endif %}
+    {% endif %}
+    
+    <a href="{% url 'MyApp:dashboard' %}">Back to Dashboard</a>
+</div>
+{% endblock %}
