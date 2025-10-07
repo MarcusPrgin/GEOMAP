@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Map View{% endblock %}
+
+{% block content %}
+<h1>Geographic Map</h1>
+<div id="map"></div>
+{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map {
+        height: 90vh;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([43.65107, -79.347015], 13);  // Toronto
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    L.marker([43.65107, -79.347015])
+        .addTo(map)
+        .bindPopup("You're in Toronto!")
+        .openPopup();
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+  <h2 style="font-family: Arial, sans-serif; margin-bottom: 20px;">📅 My Calendar</h2>
+  <div id="calendar"></div>
+
+  <!-- FullCalendar Styles and Scripts -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let calendarEl = document.getElementById('calendar');
+      let calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        selectable: true,
+        editable: true,
+        events: '/api/tasks/',
+        select: function(info) {
+          const title = prompt("Enter task title:");
+          if (title) {
+            fetch('/tasks/create/', {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: new URLSearchParams({
+                title: title,
+                start: info.startStr,
+                end: info.endStr,
+              })
+            }).then(() => calendar.refetchEvents());
+          }
+        },
+        eventClick: function(info) {
+          if (confirm("Delete this task?")) {
+            fetch(`/tasks/delete/${info.event.id}/`, {
+              method: 'POST',
+              headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            }).then(() => calendar.refetchEvents());
+          }
+        }
+      });
+      calendar.render();
+    });
+  </script>
+{% endblock %}
