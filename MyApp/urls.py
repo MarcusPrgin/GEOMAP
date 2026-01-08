@@ -22,6 +22,8 @@ urlpatterns = [
     path('map/', views.map_view, name='map'),
     path('profile/', views.profile, name='profile'),
     path('notifications/', views.notifications, name='notifications'),
+    path("api/markers/", views.markers_in_bounds, name="markers_in_bounds"),
+
     
     # User search and friend management
     path('search/', views.user_search, name='user_search'),
