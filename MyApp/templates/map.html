@@ -5,6 +5,11 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<!-- MarkerCluster CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+
 <style>
   :root{
     --bg:#070A0F;
@@ -20,7 +25,6 @@
     --shadow2: 0 12px 30px rgba(0,0,0,.35);
     --radius: 18px;
   }
-
   *{margin:0;padding:0;box-sizing:border-box;}
   body{
     background: radial-gradient(1200px 700px at 20% -10%, rgba(109,94,246,.35), transparent 55%),
@@ -31,88 +35,40 @@
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,sans-serif;
     min-height:100vh;
   }
-
-  /* Top “dropship-style” header */
   .topbar{
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    position: sticky; top: 0; z-index: 50;
     background: rgba(7,10,15,.65);
     backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--border);
   }
-
   .topbar-inner{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0.9rem 1rem;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap: 1rem;
+    max-width: 1200px; margin: 0 auto; padding: 0.9rem 1rem;
+    display:flex; align-items:center; justify-content:space-between; gap: 1rem;
   }
-
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:.75rem;
-    text-decoration:none;
-    color: var(--text);
-  }
-
+  .brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color: var(--text);}
   .brand-badge{
-    width: 38px; height: 38px;
-    border-radius: 12px;
+    width: 38px; height: 38px; border-radius: 12px;
     background: linear-gradient(135deg, rgba(109,94,246,.95), rgba(34,197,94,.75));
     box-shadow: 0 10px 25px rgba(109,94,246,.25);
-    display:grid;
-    place-items:center;
-    font-weight: 900;
+    display:grid; place-items:center; font-weight: 900;
   }
-
-  .brand-text{
-    display:flex;
-    flex-direction:column;
-    line-height: 1.1;
-  }
-
+  .brand-text{display:flex;flex-direction:column;line-height: 1.1;}
   .brand-text strong{ font-size: 1.05rem; letter-spacing: .2px; }
   .brand-text span{ font-size: .85rem; color: var(--muted); }
-
-  .top-actions{
-    display:flex;
-    align-items:center;
-    gap: .75rem;
-    flex-wrap: wrap;
-    justify-content:flex-end;
-  }
-
+  .top-actions{display:flex;align-items:center;gap: .75rem;flex-wrap: wrap;justify-content:flex-end;}
   .pill{
-    padding: .55rem .8rem;
-    border-radius: 999px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-size: .9rem;
-    display:flex;
-    align-items:center;
-    gap:.5rem;
-    white-space: nowrap;
+    padding: .55rem .8rem; border-radius: 999px; background: var(--panel);
+    border: 1px solid var(--border); color: var(--muted); font-size: .9rem;
+    display:flex; align-items:center; gap:.5rem; white-space: nowrap;
   }
 
   .hero{
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 1200px; margin: 0 auto;
     padding: 2.2rem 1rem 1.2rem;
-    display:grid;
-    grid-template-columns: 1.15fr .85fr;
-    gap: 1.2rem;
-    align-items: stretch;
+    display:grid; grid-template-columns: 1.15fr .85fr;
+    gap: 1.2rem; align-items: stretch;
   }
-
-  @media (max-width: 900px){
-    .hero{ grid-template-columns: 1fr; }
-  }
+  @media (max-width: 900px){ .hero{ grid-template-columns: 1fr; } }
 
   .hero-card{
     background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
@@ -123,38 +79,26 @@
     position: relative;
     overflow:hidden;
   }
-
   .hero-card:before{
-    content:"";
-    position:absolute; inset:-2px;
+    content:""; position:absolute; inset:-2px;
     background: radial-gradient(700px 240px at 15% 0%, rgba(109,94,246,.20), transparent 60%),
                 radial-gradient(700px 240px at 95% 15%, rgba(34,197,94,.14), transparent 60%);
     pointer-events:none;
   }
-
   .hero-card > * { position: relative; }
-
   .kicker{
-    display:inline-flex;
-    align-items:center;
-    gap:.5rem;
-    padding: .35rem .65rem;
-    border-radius: 999px;
-    background: rgba(109,94,246,.16);
-    border: 1px solid rgba(109,94,246,.25);
-    color: rgba(234,240,255,.9);
-    font-size: .85rem;
-    margin-bottom: .85rem;
-    width: fit-content;
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding: .35rem .65rem; border-radius: 999px;
+    background: rgba(109,94,246,.16); border: 1px solid rgba(109,94,246,.25);
+    color: rgba(234,240,255,.9); font-size: .85rem;
+    margin-bottom: .85rem; width: fit-content;
   }
-
   .headline{
     font-size: clamp(1.8rem, 3vw, 2.6rem);
     font-weight: 900;
     letter-spacing: -0.6px;
     margin-bottom: .6rem;
   }
-
   .subhead{
     color: var(--muted);
     font-size: 1.05rem;
@@ -162,24 +106,14 @@
     max-width: 60ch;
     margin-bottom: 1.1rem;
   }
-
-  .trust-row{
-    display:flex;
-    gap:.75rem;
-    flex-wrap:wrap;
-    margin-top: .25rem;
-  }
-
+  .trust-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top: .25rem;}
   .trust{
-    padding: .55rem .8rem;
-    border-radius: 999px;
+    padding: .55rem .8rem; border-radius: 999px;
     border: 1px solid var(--border);
     background: rgba(255,255,255,.05);
     color: rgba(234,240,255,.86);
     font-size: .9rem;
-    display:flex;
-    align-items:center;
-    gap:.5rem;
+    display:flex; align-items:center; gap:.5rem;
   }
 
   .side-card{
@@ -189,18 +123,10 @@
     padding: 1.25rem;
     box-shadow: var(--shadow2);
   }
-
-  .side-title{
-    font-weight: 800;
-    margin-bottom: .75rem;
-    letter-spacing: -.2px;
-  }
-
+  .side-title{font-weight: 800; margin-bottom: .75rem; letter-spacing: -.2px;}
   .perk{
-    display:flex;
-    gap: .75rem;
-    padding: .75rem;
-    border-radius: 14px;
+    display:flex; gap: .75rem;
+    padding: .75rem; border-radius: 14px;
     background: rgba(255,255,255,.05);
     border: 1px solid rgba(255,255,255,.08);
     margin-bottom: .75rem;
@@ -209,17 +135,27 @@
   .perk b{ display:block; margin-bottom:.15rem; }
   .perk p{ color: var(--muted); font-size: .92rem; line-height: 1.35; }
 
-  /* Controls (product-like CTA row) */
-  .controls{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem 1rem;
-    display:flex;
-    gap:.8rem;
-    flex-wrap:wrap;
-    align-items:center;
+  .shippingbar{
+    max-width:1200px; margin: 0 auto;
+    padding: 0 1rem 1.2rem;
+    display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;
   }
+  .ship{
+    flex: 1; min-width: 220px;
+    padding: .85rem 1rem; border-radius: 16px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.10);
+    color: rgba(234,240,255,.88);
+    display:flex; gap:.75rem; align-items:center;
+  }
+  .ship strong{ display:block; font-weight: 900; }
+  .ship span{ display:block; color: var(--muted); font-size: .9rem; margin-top:.1rem; }
 
+  .controls{
+    max-width: 1200px; margin: 0 auto;
+    padding: 0 1rem 1rem;
+    display:flex; gap:.8rem; flex-wrap:wrap; align-items:center;
+  }
   .btn{
     padding: .85rem 1.1rem;
     border-radius: 14px;
@@ -229,98 +165,49 @@
     font-weight: 800;
     cursor:pointer;
     transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
-    display:inline-flex;
-    align-items:center;
-    gap:.55rem;
+    display:inline-flex; align-items:center; gap:.55rem;
     text-decoration:none;
     box-shadow: 0 10px 20px rgba(0,0,0,.22);
   }
-
   .btn:hover{
     transform: translateY(-1px);
     box-shadow: 0 18px 35px rgba(0,0,0,.32);
     background: rgba(255,255,255,.10);
     border-color: rgba(255,255,255,.16);
   }
-
   .btn.primary{
     background: linear-gradient(135deg, rgba(109,94,246,.95), rgba(109,94,246,.65));
     border-color: rgba(109,94,246,.55);
   }
-
-  .btn.primary:hover{
-    background: linear-gradient(135deg, rgba(109,94,246,1), rgba(109,94,246,.72));
-  }
-
-  .btn.ghost{
-    background: rgba(255,255,255,.06);
-  }
-
   .btn.danger{
     background: linear-gradient(135deg, rgba(239,68,68,.95), rgba(239,68,68,.62));
     border-color: rgba(239,68,68,.55);
   }
-
+  .btn.ghost{ background: rgba(255,255,255,.06); }
   .btn.active{
     outline: 2px solid rgba(109,94,246,.65);
     background: rgba(109,94,246,.20);
     border-color: rgba(109,94,246,.40);
   }
+  .btn .dot{ width: 8px; height: 8px; border-radius: 999px; background: rgba(234,240,255,.85); opacity: .9; }
 
-  .btn .dot{
-    width: 8px; height: 8px;
-    border-radius: 999px;
-    background: rgba(234,240,255,.85);
-    opacity: .9;
-  }
-
-  /* Map container */
-  .map-wrap{
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem 2rem;
-  }
-
+  .map-wrap{ max-width: 1200px; margin: 0 auto; padding: 0 1rem 2rem; }
   .map-container{
-    border-radius: 22px;
-    overflow: hidden;
+    border-radius: 22px; overflow: hidden;
     border: 1px solid rgba(255,255,255,.10);
     box-shadow: var(--shadow);
     background: rgba(255,255,255,.02);
   }
-
   .map-header{
     padding: 1rem 1.25rem;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:1rem;
+    display:flex; justify-content:space-between; align-items:center; gap:1rem;
     flex-wrap:wrap;
     background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
     border-bottom: 1px solid rgba(255,255,255,.08);
   }
-
-  .map-title{
-    font-weight: 900;
-    letter-spacing: -.3px;
-    font-size: 1.15rem;
-    display:flex;
-    align-items:center;
-    gap:.6rem;
-  }
-
-  .map-title small{
-    color: var(--muted);
-    font-weight: 700;
-    font-size: .9rem;
-  }
-
-  .map-controls{
-    display:flex;
-    gap:.65rem;
-    flex-wrap: wrap;
-    align-items:center;
-  }
+  .map-title{font-weight: 900; letter-spacing: -.3px; font-size: 1.15rem; display:flex; align-items:center; gap:.6rem;}
+  .map-title small{color: var(--muted); font-weight: 700; font-size: .9rem;}
+  .map-controls{display:flex; gap:.65rem; flex-wrap: wrap; align-items:center;}
 
   .status-card{
     padding: .55rem .75rem;
@@ -329,40 +216,22 @@
     border: 1px solid rgba(255,255,255,.10);
     color: rgba(234,240,255,.86);
     font-size: .9rem;
-    display:inline-flex;
-    align-items:center;
-    gap:.45rem;
+    display:inline-flex; align-items:center; gap:.45rem;
     white-space: nowrap;
   }
-
-  .status-active{
-    background: rgba(109,94,246,.18);
-    border-color: rgba(109,94,246,.30);
-    color: rgba(234,240,255,.95);
-  }
-
-  .status-counter{
-    background: rgba(34,197,94,.16);
-    border-color: rgba(34,197,94,.28);
-    color: rgba(234,240,255,.95);
-    font-weight: 900;
-  }
+  .status-active{ background: rgba(109,94,246,.18); border-color: rgba(109,94,246,.30); color: rgba(234,240,255,.95); }
+  .status-counter{ background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.28); color: rgba(234,240,255,.95); font-weight: 900; }
 
   #map{ height: 640px; width: 100%; background:#0B0F18; }
 
-  /* Modal (kept) */
+  /* Modal */
   .marker-modal{
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(0,0,0,.68);
     backdrop-filter: blur(6px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index: 10000;
-    padding: 1rem;
+    display:flex; align-items:center; justify-content:center;
+    z-index: 10000; padding: 1rem;
   }
-
   .marker-modal-content{
     width: min(560px, 100%);
     border-radius: 18px;
@@ -371,25 +240,10 @@
     padding: 1.25rem 1.25rem 1.15rem;
     box-shadow: 0 25px 70px rgba(0,0,0,.55);
   }
-
-  .marker-modal-content h3{
-    color: #2b2ce0;
-    margin-bottom: .9rem;
-    font-weight: 900;
-    letter-spacing: -.2px;
-  }
-
+  .marker-modal-content h3{ color: #2b2ce0; margin-bottom: .9rem; font-weight: 900; letter-spacing: -.2px; }
   .form-group{ margin-bottom: .9rem; }
-
-  .form-group label{
-    display:block;
-    margin-bottom:.35rem;
-    font-weight: 800;
-    color:#0B0F18;
-  }
-
-  .form-group input,
-  .form-group textarea{
+  .form-group label{ display:block; margin-bottom:.35rem; font-weight: 800; color:#0B0F18; }
+  .form-group input, .form-group textarea{
     width:100%;
     padding: .8rem .85rem;
     border: 2px solid rgba(11,15,24,.10);
@@ -397,13 +251,10 @@
     font-size: 1rem;
     outline: none;
   }
-
-  .form-group input:focus,
-  .form-group textarea:focus{
+  .form-group input:focus, .form-group textarea:focus{
     border-color: rgba(109,94,246,.55);
     box-shadow: 0 0 0 4px rgba(109,94,246,.18);
   }
-
   .coordinates-display{
     padding: .75rem .85rem;
     border-radius: 14px;
@@ -411,14 +262,7 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     color: rgba(11,15,24,.85);
   }
-
-  .modal-buttons{
-    display:flex;
-    gap:.6rem;
-    justify-content:flex-end;
-    margin-top: 1.05rem;
-  }
-
+  .modal-buttons{ display:flex; gap:.6rem; justify-content:flex-end; margin-top: 1.05rem; }
   .modal-btn{
     padding: .8rem 1rem;
     border-radius: 14px;
@@ -427,16 +271,8 @@
     font-weight: 900;
     font-size: 1rem;
   }
-
-  .modal-btn-cancel{
-    background: rgba(11,15,24,.08);
-    color: rgba(11,15,24,.86);
-  }
-
-  .modal-btn-create{
-    background: linear-gradient(135deg, rgba(109,94,246,.95), rgba(109,94,246,.70));
-    color:#fff;
-  }
+  .modal-btn-cancel{ background: rgba(11,15,24,.08); color: rgba(11,15,24,.86); }
+  .modal-btn-create{ background: linear-gradient(135deg, rgba(109,94,246,.95), rgba(109,94,246,.70)); color:#fff; }
 
   .user-location-marker{
     background: #3b82f6;
@@ -444,33 +280,6 @@
     border-radius: 50%;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
-
-  /* Small “shipping bar” */
-  .shippingbar{
-    max-width:1200px;
-    margin: 0 auto;
-    padding: 0 1rem 1.2rem;
-    display:flex;
-    gap:.75rem;
-    flex-wrap:wrap;
-    align-items:center;
-  }
-
-  .ship{
-    flex: 1;
-    min-width: 220px;
-    padding: .85rem 1rem;
-    border-radius: 16px;
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.10);
-    color: rgba(234,240,255,.88);
-    display:flex;
-    gap:.75rem;
-    align-items:center;
-  }
-
-  .ship strong{ display:block; font-weight: 900; }
-  .ship span{ display:block; color: var(--muted); font-size: .9rem; margin-top:.1rem; }
 </style>
 {% endblock %}
 
@@ -484,12 +293,9 @@
         <span>Pin, track, and share locations</span>
       </div>
     </a>
-
-    <!-- <div class="top-actions">
-      <div class="pill">🔒 Secure Sync</div>
-      <div class="pill">⚡ Real-time</div>
-      <div class="pill">📦 “Pro” feel</div>
-    </div> -->
+    <div class="top-actions">
+      <div class="pill">Made By Marcus</div>
+    </div>
   </div>
 </div>
 
@@ -501,65 +307,25 @@
       Add points fast, remove clutter instantly, and jump to your live position.
       Built for speed, clarity, and that clean dropshipping aesthetic.
     </p>
-
     <div class="trust-row">
       <div class="trust">✅ One-click add/remove</div>
       <div class="trust">✅ Dark map theme</div>
-      <div class="trust">✅ Clean UI</div>
+      <div class="trust">✅ Scales to 100k+</div>
     </div>
   </div>
 
   <aside class="side-card">
     <div class="side-title">Why GeoMap?</div>
-
-    <div class="perk">
-      <div>🚀</div>
-      <div>
-        <b>Fast workflows</b>
-        <p>Switch modes and manage points in seconds.</p>
-      </div>
-    </div>
-
-    <div class="perk">
-      <div>📍</div>
-      <div>
-        <b>Location jump</b>
-        <p>Find your current position and center the map instantly.</p>
-      </div>
-    </div>
-
-    <div class="perk">
-      <div>👥</div>
-      <div>
-        <b>Peer tracking</b>
-        <p>Turn on tracking to see when others are nearby.</p>
-      </div>
-    </div>
+    <div class="perk"><div>🚀</div><div><b>Fast at scale</b><p>Loads only markers you can actually see.</p></div></div>
+    <div class="perk"><div>🧠</div><div><b>Smart grouping</b><p>Nearby markers cluster automatically.</p></div></div>
+    <div class="perk"><div>↩</div><div><b>Exit clusters</b><p>Enter a cluster, then jump back.</p></div></div>
   </aside>
 </section>
 
 <div class="shippingbar">
-  <div class="ship">
-    <div>🚚</div>
-    <div>
-      <strong>Instant “delivery”</strong>
-      <span>Markers appear immediately after saving</span>
-    </div>
-  </div>
-  <div class="ship">
-    <div>⭐</div>
-    <div>
-      <strong>Premium look</strong>
-      <span>Glass panels + rounded cards + soft shadows</span>
-    </div>
-  </div>
-  <div class="ship">
-    <div>🛡️</div>
-    <div>
-      <strong>CSRF protected</strong>
-      <span>Safe requests built in</span>
-    </div>
-  </div>
+  <div class="ship"><div>🚚</div><div><strong>Instant “delivery”</strong><span>Markers appear immediately after saving</span></div></div>
+  <div class="ship"><div>⭐</div><div><strong>Premium look</strong><span>Glass panels + rounded cards + soft shadows</span></div></div>
+  <div class="ship"><div>🛡️</div><div><strong>CSRF protected</strong><span>Safe requests built in</span></div></div>
 </div>
 
 <div class="controls">
@@ -569,24 +335,28 @@
   <button id="clearAllBtn" class="btn danger">🧹 Clear All</button>
   <button id="findLocationBtn" class="btn ghost">📍 Find My Location</button>
   <button id="peerTrackingBtn" class="btn ghost">👥 Peer Tracking</button>
+  <button id="exitClusterBtn" class="btn ghost" style="display:none;">↩ Exit Cluster</button>
 </div>
 
 <div class="map-wrap">
   <div class="map-container">
     <div class="map-header">
-      <div class="map-title">🗺️ Live Map <small>Click to add when enabled</small></div>
+      <div class="map-title">🗺️ Live Map <small>Loads markers in view</small></div>
       <div class="map-controls">
         <div id="statusIndicator" class="status-card">Ready</div>
         <div id="trackingIndicator" class="status-card" style="display:none;">🔍 Tracking</div>
-        <div class="status-card status-counter">Points: <span id="count">0</span></div>
+        <div class="status-card status-counter">Loaded: <span id="count">0</span></div>
       </div>
     </div>
     <div id="map"></div>
   </div>
 </div>
 
+<!-- Keep this for compatibility, but we won't dump 100k into HTML -->
 {{ markers|json_script:"markers-data" }}
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script>
 function getCookie(name) {
@@ -605,18 +375,16 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
-const markersData = JSON.parse(document.getElementById('markers-data').textContent);
-const map = L.map('map').setView([37.7749, -122.4194], 10);
+const map = L.map('map', { preferCanvas: true }).setView([37.7749, -122.4194], 10);
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  attribution: '&copy; OpenStreetMap &copy; CARTO',
   subdomains: 'abcd',
   maxZoom: 20,
 }).addTo(map);
 
 let addMode = false;
 let deleteMode = false;
-let markerCount = markersData ? markersData.length : 0;
 let userMarker = null;
 let pendingMarkerLocation = null;
 let isTrackingEnabled = {% if is_tracking_enabled %}true{% else %}false{% endif %};
@@ -626,13 +394,12 @@ const deleteModeBtn = document.getElementById('deleteModeBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const findLocationBtn = document.getElementById('findLocationBtn');
 const peerTrackingBtn = document.getElementById('peerTrackingBtn');
+const exitClusterBtn = document.getElementById('exitClusterBtn');
 const statusIndicator = document.getElementById('statusIndicator');
 const trackingIndicator = document.getElementById('trackingIndicator');
 const countElement = document.getElementById('count');
 
 function updateUI() {
-  countElement.textContent = markerCount;
-
   if (addMode) {
     statusIndicator.textContent = 'Click map to add a point';
     statusIndicator.className = 'status-card status-active';
@@ -649,39 +416,91 @@ function updateUI() {
     addModeBtn.classList.remove('active');
     deleteModeBtn.classList.remove('active');
   }
-
-  // basic visual for tracking toggle (keeps your backend var untouched)
   trackingIndicator.style.display = isTrackingEnabled ? 'inline-flex' : 'none';
 }
-const markerLayer = L.layerGroup().addTo(map);
 
-if (markersData) {
-  markersData.forEach(markerData => {
-    const marker = L.marker([markerData.latitude, markerData.longitude])
-      .bindPopup(`
-        <div style="min-width: 220px;">
-          <h4 style="margin:0 0 .5rem 0;font-size:1.05rem;color:#111;font-weight:900;">
-            ${markerData.title || 'Location Point'}
-          </h4>
-          ${markerData.description ? `<p style="margin:0 0 .7rem 0;color:#555;font-size:.92rem;line-height:1.35;">${markerData.description}</p>` : ''}
-          <p style="margin:0;color:#777;font-size:.82rem;font-family:ui-monospace,monospace;">
-            ${markerData.latitude.toFixed(4)}, ${markerData.longitude.toFixed(4)}
-          </p>
-        </div>
-      `);
+const markerLayer = L.markerClusterGroup({
+  chunkedLoading: true,
+  removeOutsideVisibleBounds: true,
+  maxClusterRadius: 60,
+  showCoverageOnHover: false
+});
+map.addLayer(markerLayer);
 
-    marker.markerId = markerData.id;
+const loadedIds = new Set();
+let lastView = null;
 
-    marker.on('click', function(e) {
-      if (deleteMode) {
-        e.originalEvent.stopPropagation();
-        deleteMarker(marker);
-      }
-    });
-
-    markerLayer.addLayer(marker);
-  });
+// Enter cluster = zoom into its bounds and show Exit button
+function enterCluster(clusterLayer) {
+  lastView = { center: map.getCenter(), zoom: map.getZoom() };
+  map.fitBounds(clusterLayer.getBounds(), { padding: [30, 30] });
+  exitClusterBtn.style.display = 'inline-flex';
 }
+
+// Exit cluster = restore previous view
+function exitCluster() {
+  if (lastView) map.setView(lastView.center, lastView.zoom);
+  exitClusterBtn.style.display = 'none';
+}
+exitClusterBtn.addEventListener('click', exitCluster);
+
+// Clicking a cluster “enters” it
+markerLayer.on('clusterclick', function(e) {
+  enterCluster(e.layer);
+});
+
+function makePopupHtml(m) {
+  const title = (m.title || 'Location Point');
+  const desc = (m.description || '');
+  const lat = Number(m.latitude);
+  const lng = Number(m.longitude);
+
+  return `
+    <div style="min-width:220px;">
+      <h4 style="margin:0 0 .5rem 0;font-size:1.05rem;color:#111;font-weight:900;">${title}</h4>
+      ${desc ? `<p style="margin:0 0 .7rem 0;color:#555;font-size:.92rem;line-height:1.35;">${desc}</p>` : ''}
+      <p style="margin:0;color:#777;font-size:.82rem;font-family:ui-monospace,monospace;">${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
+    </div>
+  `;
+}
+
+// ✅ LOAD MARKERS BY BOUNDS (fast for 100k)
+async function loadMarkersForView() {
+  const b = map.getBounds();
+  const url = `{% url "MyApp:markers_in_bounds" %}?south=${b.getSouth()}&west=${b.getWest()}&north=${b.getNorth()}&east=${b.getEast()}`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+
+    const payload = await res.json();
+    const arr = payload.markers || [];
+
+    for (const m of arr) {
+      if (!m || loadedIds.has(m.id)) continue;
+      loadedIds.add(m.id);
+
+      const marker = L.marker([m.latitude, m.longitude]).bindPopup(makePopupHtml(m));
+      marker.markerId = m.id;
+
+      marker.on('click', function(e) {
+        if (deleteMode) {
+          e.originalEvent.stopPropagation();
+          deleteMarker(marker);
+        }
+      });
+
+      markerLayer.addLayer(marker);
+    }
+
+    countElement.textContent = loadedIds.size.toLocaleString();
+  } catch (err) {
+    console.error('loadMarkersForView error:', err);
+  }
+}
+
+map.on('moveend zoomend', loadMarkersForView);
+loadMarkersForView();
 
 addModeBtn.addEventListener('click', () => {
   addMode = !addMode;
@@ -701,7 +520,6 @@ clearAllBtn.addEventListener('click', () => {
 
 findLocationBtn.addEventListener('click', () => getUserLocation());
 
-/* Optional: quick front-end toggle UI only (remove if you handle on backend) */
 peerTrackingBtn.addEventListener('click', () => {
   isTrackingEnabled = !isTrackingEnabled;
   updateUI();
@@ -767,30 +585,23 @@ async function addMarker(lat, lng, title='Location Point', description='') {
       headers: { 'Content-Type':'application/json', 'X-CSRFToken': csrftoken },
       body: JSON.stringify({ latitude: lat, longitude: lng, title, description })
     });
-
     if (!response.ok) return;
+
     const data = await response.json();
+    const m = {
+      id: data.id,
+      latitude: lat,
+      longitude: lng,
+      title,
+      description
+    };
 
-    const marker = L.marker([lat, lng])
-      .bindPopup(`
-        <div style="min-width: 220px;">
-          <h4 style="margin:0 0 .5rem 0;font-size:1.05rem;color:#111;font-weight:900;">${title}</h4>
-          ${description ? `<p style="margin:0 0 .7rem 0;color:#555;font-size:.92rem;line-height:1.35;">${description}</p>` : ''}
-          <p style="margin:0;color:#777;font-size:.82rem;font-family:ui-monospace,monospace;">${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
-        </div>
-      `);
-
-    marker.markerId = data.id;
-    marker.on('click', (e) => {
-      if (deleteMode) {
-        e.originalEvent.stopPropagation();
-        deleteMarker(marker);
-      }
-    });
-
+    loadedIds.add(m.id);
+    const marker = L.marker([m.latitude, m.longitude]).bindPopup(makePopupHtml(m));
+    marker.markerId = m.id;
     markerLayer.addLayer(marker);
-    markerCount++;
-    updateUI();
+
+    countElement.textContent = loadedIds.size.toLocaleString();
   } catch (err) {
     console.error('Error adding marker:', err);
   }
@@ -802,11 +613,11 @@ async function deleteMarker(marker) {
       method: 'DELETE',
       headers: { 'X-CSRFToken': csrftoken }
     });
-
     if (!response.ok) return;
+
     markerLayer.removeLayer(marker);
-    markerCount--;
-    updateUI();
+    loadedIds.delete(marker.markerId);
+    countElement.textContent = loadedIds.size.toLocaleString();
   } catch (err) {
     console.error('Error deleting marker:', err);
   }
@@ -818,11 +629,11 @@ async function clearAllMarkers() {
       method: 'DELETE',
       headers: { 'X-CSRFToken': csrftoken }
     });
-
     if (!response.ok) return;
+
     markerLayer.clearLayers();
-    markerCount = 0;
-    updateUI();
+    loadedIds.clear();
+    countElement.textContent = '0';
   } catch (err) {
     console.error('Error clearing markers:', err);
   }

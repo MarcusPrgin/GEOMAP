@@ -20,6 +20,34 @@ from .models import (
     UserProfile, Friendship, ProximityAlert, ProximityNotification
 )
 
+from django.http import JsonResponse
+from .models import Marker
+
+from django.http import JsonResponse
+from .models import Marker
+
+def markers_in_bounds(request):
+    south = float(request.GET.get("south"))
+    west = float(request.GET.get("west"))
+    north = float(request.GET.get("north"))
+    east = float(request.GET.get("east"))
+
+    qs = Marker.objects.filter(
+        latitude__gte=south, latitude__lte=north,
+        longitude__gte=west, longitude__lte=east
+    ).only("id", "latitude", "longitude", "title", "description")[:20000]
+
+    return JsonResponse({
+        "markers": [{
+            "id": m.id,
+            "latitude": float(m.latitude),
+            "longitude": float(m.longitude),
+            "title": m.title,
+            "description": m.description or ""
+        } for m in qs]
+    })
+
+
 # ===== AUTHENTICATION VIEWS =====
 
 def register_view(request):
