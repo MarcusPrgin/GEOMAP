@@ -76,7 +76,7 @@ WSGI_APPLICATION = 'WebScanner.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "geomap.sqlite3",
+        "NAME": BASE_DIR / "/Users/marcus/Desktop/WebApp/GEOMAP/db.sqlite3",
     }
 }
 
