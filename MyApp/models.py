@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.db.models import Q
 
 
 class Marker(models.Model):
@@ -70,10 +71,6 @@ class UserProfile(models.Model):
         self.save(update_fields=["latitude", "longitude", "last_location_update"])
 
     def get_distance_to(self, other_profile):
-        """
-        Distance in KM using a simple haversine implementation.
-        (No external dependencies like geopy.)
-        """
         if not all(
             [
                 self.latitude is not None,
@@ -99,7 +96,7 @@ class UserProfile(models.Model):
             + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
         )
         c = 2 * math.asin(math.sqrt(a))
-        R = 6371.0  # Earth radius in km
+        R = 6371.0
         return R * c
 
 
@@ -140,21 +137,15 @@ class Friendship(models.Model):
 
     @classmethod
     def get_friends(cls, user):
-        return settings.AUTH_USER_MODEL and (
-            models.get_model  # not used; keep method below
-        )
-
-    @classmethod
-    def get_friends(cls, user):
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
         return User.objects.filter(
-            models.Q(
+            Q(
                 friend_requests_sent__addressee=user,
                 friend_requests_sent__status=cls.ACCEPTED,
             )
-            | models.Q(
+            | Q(
                 friend_requests_received__requester=user,
                 friend_requests_received__status=cls.ACCEPTED,
             )
@@ -170,7 +161,7 @@ class ProximityAlert(models.Model):
         on_delete=models.CASCADE,
         related_name="friend_proximity_alerts",
     )
-    distance_threshold = models.FloatField(default=1.0)  # kilometers
+    distance_threshold = models.FloatField(default=1.0)
     is_active = models.BooleanField(default=True)
     last_triggered = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -191,7 +182,7 @@ class ProximityNotification(models.Model):
         on_delete=models.CASCADE,
         related_name="friend_notifications",
     )
-    distance = models.FloatField()  # km
+    distance = models.FloatField()
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
